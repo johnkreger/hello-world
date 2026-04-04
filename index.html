@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hello Elliot!</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .hello-text {
+      font-size: clamp(3rem, 10vw, 8rem);
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      user-select: none;
+    }
+
+    .theme-label {
+      font-size: 0.9rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      opacity: 0.75;
+    }
+
+    .btn {
+      padding: 0.75rem 2.5rem;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+    .btn:hover  { transform: scale(1.06); }
+    .btn:active { transform: scale(0.96); }
+
+    /* ================== NEON GLOW ================== */
+    body.theme-neon { background: #07070f; }
+
+    body.theme-neon .hello-text {
+      color: #fff;
+      animation: neonPulse 2s ease-in-out infinite;
+    }
+    @keyframes neonPulse {
+      0%, 100% {
+        text-shadow: 0 0 8px #0ff, 0 0 20px #0ff, 0 0 50px #0ff, 0 0 100px #0ff;
+      }
+      50% {
+        text-shadow: 0 0 4px #0ff, 0 0 10px #0ff, 0 0 25px #0ff;
+        opacity: 0.82;
+      }
+    }
+    body.theme-neon .theme-label { color: #0ff; }
+    body.theme-neon .btn {
+      background: transparent;
+      border: 2px solid #f0f;
+      color: #f0f;
+      box-shadow: 0 0 12px #f0f;
+    }
+    body.theme-neon .btn:hover { background: #f0f; color: #07070f; }
+
+    /* ================== MATRIX RAIN ================== */
+    body.theme-matrix { background: #000; }
+
+    body.theme-matrix .hello-text {
+      color: #00ff41;
+      font-family: 'Courier New', monospace;
+      animation: matrixGlow 1.5s ease-in-out infinite;
+    }
+    @keyframes matrixGlow {
+      0%, 100% { text-shadow: 0 0 8px #00ff41, 0 0 25px #00ff41; }
+      50%       { text-shadow: 0 0 4px #00ff41, 0 0 12px #00ff41, 0 0 50px #00ff41; }
+    }
+    body.theme-matrix .theme-label { color: #00ff41; }
+    body.theme-matrix .btn { background: #00ff41; color: #000; font-family: 'Courier New', monospace; }
+
+    /* ================== RETRO WAVE ================== */
+    body.theme-retro {
+      background: linear-gradient(180deg, #0b0028 0%, #280048 40%, #7a0055 70%, #ff4400 100%);
+    }
+    body.theme-retro .hello-text {
+      background: linear-gradient(90deg, #ff00ff, #00ffff, #ffff00, #ff00ff, #00ffff);
+      background-size: 300% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: retroShift 3s linear infinite;
+      filter: drop-shadow(0 0 18px #ff00ff);
+    }
+    @keyframes retroShift {
+      from { background-position: 0% center; }
+      to   { background-position: 300% center; }
+    }
+    body.theme-retro .theme-label { color: #ff00ff; text-shadow: 0 0 8px #ff00ff; }
+    body.theme-retro .btn { background: linear-gradient(90deg, #ff00ff, #00ffff); color: #fff; }
+
+    /* ================== GLITCH ================== */
+    body.theme-glitch { background: #0c0c0c; }
+
+    body.theme-glitch .hello-text {
+      color: #fff;
+      position: relative;
+      animation: glitchMain 3.5s infinite;
+    }
+    body.theme-glitch .hello-text::before,
+    body.theme-glitch .hello-text::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+    body.theme-glitch .hello-text::before {
+      color: #ff0055;
+      animation: glitchTop 3.5s infinite;
+      clip-path: polygon(0 0, 100% 0, 100% 38%, 0 38%);
+    }
+    body.theme-glitch .hello-text::after {
+      color: #00ffff;
+      animation: glitchBot 3.5s infinite;
+      clip-path: polygon(0 62%, 100% 62%, 100% 100%, 0 100%);
+    }
+    @keyframes glitchMain {
+      0%, 88%, 100% { transform: translate(0); }
+      90% { transform: translate(-3px,  1px); }
+      92% { transform: translate( 3px, -1px); }
+      94% { transform: translate(-2px,  2px); }
+      96% { transform: translate( 2px, -2px); }
+    }
+    @keyframes glitchTop {
+      0%, 88%, 100% { transform: translate(0); opacity: 0; }
+      89% { transform: translate(-4px, 0); opacity: 1; }
+      93% { transform: translate( 4px, 0); opacity: 1; }
+      95% { transform: translate(0);      opacity: 0; }
+    }
+    @keyframes glitchBot {
+      0%, 86%, 100% { transform: translate(0); opacity: 0; }
+      87% { transform: translate( 4px, 0); opacity: 1; }
+      91% { transform: translate(-4px, 0); opacity: 1; }
+      93% { transform: translate(0);       opacity: 0; }
+    }
+    body.theme-glitch .theme-label { color: #ff0055; }
+    body.theme-glitch .btn { background: #fff; color: #0c0c0c; }
+
+    /* ================== TYPEWRITER ================== */
+    body.theme-typewriter { background: #f4efe6; }
+
+    body.theme-typewriter .hello-text {
+      color: #2a2a2a;
+      font-family: 'Courier New', monospace;
+      border-right: 5px solid #2a2a2a;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 0;
+      animation: typeOut 2.2s steps(14, end) forwards, blink 0.7s step-end infinite;
+    }
+    @keyframes typeOut {
+      from { width: 0; }
+      to   { width: 100%; }
+    }
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+    body.theme-typewriter .theme-label { color: #888; }
+    body.theme-typewriter .btn { background: #2a2a2a; color: #f4efe6; font-family: 'Courier New', monospace; }
+
+    /* ================== FIREWORKS ================== */
+    body.theme-fireworks { background: #04001a; }
+
+    body.theme-fireworks .hello-text {
+      color: #fff;
+      animation: fireworksSparkle 2s ease-in-out infinite;
+    }
+    @keyframes fireworksSparkle {
+      0%, 100% { text-shadow: 0 0 20px rgba(255,255,255,0.7); }
+      50%       { text-shadow: 0 0 40px rgba(255,200,80,1), 0 0 80px rgba(255,80,0,0.6); }
+    }
+    body.theme-fireworks .theme-label { color: #ffcc44; }
+    body.theme-fireworks .btn { background: linear-gradient(135deg, #ff4400, #ffaa00); color: #fff; }
+
+    /* ================== STARFIELD ================== */
+    body.theme-starfield { background: #000012; }
+
+    body.theme-starfield .hello-text {
+      color: #fff;
+      text-shadow: 0 0 30px rgba(140,190,255,0.9);
+      animation: starFloat 4s ease-in-out infinite;
+    }
+    @keyframes starFloat {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-18px); }
+    }
+    body.theme-starfield .theme-label { color: #88aaff; }
+    body.theme-starfield .btn {
+      background: rgba(80,130,255,0.15);
+      border: 2px solid #88aaff;
+      color: #88aaff;
+    }
+
+    /* ================== BOUNCE ================== */
+    body.theme-bounce {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    body.theme-bounce .hello-text { color: #fff; }
+    body.theme-bounce .hello-text .letter {
+      display: inline-block;
+      animation: letterBounce 0.55s ease-in-out infinite alternate;
+    }
+    @keyframes letterBounce {
+      from { transform: translateY(0px)   rotate(0deg);   }
+      to   { transform: translateY(-22px) rotate(-3deg);  }
+    }
+    body.theme-bounce .theme-label { color: rgba(255,255,255,0.85); }
+    body.theme-bounce .btn { background: #fff; color: #764ba2; }
+
+    /* ================== AMERICA ================== */
+    body.theme-america { background: #001f6b; }
+
+    body.theme-america::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(191, 10, 48, 0.3)  0px,
+        rgba(191, 10, 48, 0.3)  55px,
+        rgba(255,255,255, 0.08) 55px,
+        rgba(255,255,255, 0.08) 110px
+      );
+      animation: stripesScroll 3s linear infinite;
+      z-index: 1;
+    }
+    @keyframes stripesScroll {
+      from { transform: translateY(0); }
+      to   { transform: translateY(110px); }
+    }
+    body.theme-america .hello-text {
+      animation: americaColors 1.8s steps(1) infinite;
+    }
+    @keyframes americaColors {
+      0%   { color: #ff3355; text-shadow: 3px 3px 0 #fff, 0 0 25px rgba(255,50,80,0.7); }
+      33%  { color: #ffffff; text-shadow: 3px 3px 0 #001f6b, 0 0 25px rgba(255,255,255,0.6); }
+      66%  { color: #5599ff; text-shadow: 3px 3px 0 #fff, 0 0 25px rgba(50,100,255,0.7); }
+    }
+    body.theme-america .theme-label { color: #fff; position: relative; z-index: 10; }
+    body.theme-america .btn {
+      background: linear-gradient(90deg, #BF0A30 33%, #fff 33%, #fff 66%, #002868 66%);
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+      position: relative;
+      z-index: 10;
+    }
+
+    /* ================== ROCKET LAUNCH ================== */
+    body.theme-rocket { background: #000010; }
+
+    body.theme-rocket .hello-text {
+      color: #fff;
+      opacity: 0;
+      transform: translateY(24px) scale(0.95);
+      transition: opacity 1.3s ease, transform 1.3s ease;
+      text-shadow: 0 0 40px rgba(120,200,255,1), 0 0 90px rgba(60,140,255,0.5);
+    }
+    body.theme-rocket.revealed .hello-text {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    body.theme-rocket .theme-label { color: #88ccff; }
+    body.theme-rocket .btn {
+      background: transparent;
+      border: 2px solid #88ccff;
+      color: #88ccff;
+      box-shadow: 0 0 12px rgba(100,180,255,0.3);
+    }
+    body.theme-rocket .btn:hover { background: rgba(100,180,255,0.15); }
+  </style>
+</head>
+<body class="theme-neon">
+  <canvas id="canvas"></canvas>
+  <div class="content">
+    <div class="theme-label" id="themeLabel">Neon Glow</div>
+    <div class="hello-text" id="helloText" data-text="Hello Elliot!">Hello Elliot!</div>
+    <button class="btn" id="nextBtn">Next Theme &rarr;</button>
+  </div>
+
+  <script>
+    const THEMES = [
+      { id: 'neon',        name: 'Neon Glow',    canvas: null },
+      { id: 'matrix',      name: 'Matrix Rain',   canvas: 'matrix' },
+      { id: 'retro',       name: 'Retro Wave',    canvas: null },
+      { id: 'glitch',      name: 'Glitch',        canvas: null },
+      { id: 'typewriter',  name: 'Typewriter',    canvas: null },
+      { id: 'fireworks',   name: 'Fireworks',     canvas: 'fireworks' },
+      { id: 'starfield',   name: 'Starfield',     canvas: 'starfield' },
+      { id: 'bounce',      name: 'Bounce',        canvas: null },
+      { id: 'america',     name: '\uD83C\uDDFA\uD83C\uDDF8 America', canvas: 'america' },
+      { id: 'rocket',      name: '\uD83D\uDE80 Rocket Launch',        canvas: 'rocket'  },
+    ];
+
+    let current = 0;
+    let rafId   = null;
+
+    const canvas    = document.getElementById('canvas');
+    const ctx       = canvas.getContext('2d');
+    const body      = document.body;
+    const helloText = document.getElementById('helloText');
+    const themeLabel = document.getElementById('themeLabel');
+    const nextBtn   = document.getElementById('nextBtn');
+
+    function resize() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    /* ---- MATRIX RAIN ---- */
+    function runMatrix() {
+      const size  = 18;
+      const cols  = Math.floor(canvas.width / size);
+      const drops = Array(cols).fill(1);
+      const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホ0123456789ABCDEF';
+
+      function tick() {
+        ctx.fillStyle = 'rgba(0,0,0,0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#00ff41';
+        ctx.font = `${size}px Courier New`;
+        drops.forEach((y, i) => {
+          ctx.fillText(chars[Math.random() * chars.length | 0], i * size, y * size);
+          if (y * size > canvas.height && Math.random() > 0.975) drops[i] = 0;
+          drops[i]++;
+        });
+        rafId = requestAnimationFrame(tick);
+      }
+      tick();
+    }
+
+    /* ---- FIREWORKS ---- */
+    function runFireworks() {
+      const palette = ['#ff4400','#ffaa00','#ffff55','#ff66cc','#66ccff','#ffffff','#ff6600'];
+      const pool = [];
+
+      function burst() {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height * 0.55;
+        const col = palette[Math.random() * palette.length | 0];
+        for (let i = 0; i < 90; i++) {
+          const angle  = Math.random() * Math.PI * 2;
+          const speed  = Math.random() * 5 + 1;
+          pool.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            r: Math.random() * 2.5 + 0.5,
+            alpha: 1,
+            decay: Math.random() * 0.018 + 0.008,
+            col,
+          });
+        }
+      }
+
+      let lastBurst = 0;
+      function tick(t) {
+        ctx.fillStyle = 'rgba(4,0,26,0.18)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (t - lastBurst > 750) { burst(); lastBurst = t; }
+        for (let i = pool.length - 1; i >= 0; i--) {
+          const p = pool[i];
+          p.x += p.vx;  p.y += p.vy;
+          p.vy += 0.09;
+          p.alpha -= p.decay;
+          if (p.alpha <= 0) { pool.splice(i, 1); continue; }
+          ctx.save();
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle   = p.col;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        rafId = requestAnimationFrame(tick);
+      }
+      tick(0);
+    }
+
+    /* ---- STARFIELD ---- */
+    function runStarfield() {
+      const W = canvas.width, H = canvas.height;
+      const stars = Array.from({ length: 220 }, () => ({
+        x:  (Math.random() - 0.5) * W * 2,
+        y:  (Math.random() - 0.5) * H * 2,
+        z:  Math.random() * W,
+        pz: W,
+      }));
+      const cx = W / 2, cy = H / 2;
+
+      function tick() {
+        ctx.fillStyle = '#000012';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        stars.forEach(s => {
+          s.pz = s.z;
+          s.z -= 4;
+          if (s.z <= 0) {
+            s.x = (Math.random() - 0.5) * W * 2;
+            s.y = (Math.random() - 0.5) * H * 2;
+            s.z = W;  s.pz = W;
+          }
+          const sx = (s.x / s.z)  * W + cx;
+          const sy = (s.y / s.z)  * H + cy;
+          const px = (s.x / s.pz) * W + cx;
+          const py = (s.y / s.pz) * H + cy;
+          const alpha = Math.max(0, 1 - s.z / W);
+          const size  = Math.max(0.4, (1 - s.z / W) * 2.5);
+          ctx.strokeStyle = `rgba(200,220,255,${alpha})`;
+          ctx.lineWidth = size;
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(sx, sy);
+          ctx.stroke();
+        });
+        rafId = requestAnimationFrame(tick);
+      }
+      tick();
+    }
+
+    /* ---- AMERICA ---- */
+    function runAmerica() {
+      function makeStar(color) {
+        return {
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          vx: (Math.random() - 0.5) * 1.8,
+          vy: Math.random() * 3 + 1.2,
+          size: Math.random() * 10 + 4,
+          rot: Math.random() * Math.PI * 2,
+          rotV: (Math.random() - 0.5) * 0.08,
+          color,
+          isStar: Math.random() > 0.45,
+        };
+      }
+      const palette = ['#bf0a30','#ffffff','#002868','#ff5566','#6688ff','#ffffff'];
+      const pieces  = Array.from({ length: 160 }, () => makeStar(palette[Math.random() * palette.length | 0]));
+
+      function drawStarShape(x, y, r, rot) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rot);
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const a = (i * 4 * Math.PI / 5) - Math.PI / 2;
+          i === 0
+            ? ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r)
+            : ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function tick() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.x   += p.vx;
+          p.y   += p.vy;
+          p.rot += p.rotV;
+          if (p.y > canvas.height + 20) {
+            p.y = -20;
+            p.x = Math.random() * canvas.width;
+          }
+          ctx.fillStyle = p.color;
+          if (p.isStar) {
+            drawStarShape(p.x, p.y, p.size / 2, p.rot);
+          } else {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.fillRect(-p.size / 2, -p.size / 5, p.size, p.size / 2.5);
+            ctx.restore();
+          }
+        });
+        rafId = requestAnimationFrame(tick);
+      }
+      tick();
+    }
+
+    /* ---- ROCKET LAUNCH ---- */
+    function runRocket() {
+      const W = canvas.width, H = canvas.height;
+      const CX = W / 2;
+
+      // Twinkling background stars
+      const stars = Array.from({length: 170}, () => ({
+        x: Math.random() * W, y: Math.random() * H,
+        r: Math.random() * 1.6 + 0.3,
+        phase: Math.random() * Math.PI * 2,
+      }));
+
+      // Exhaust particle pool
+      const smoke = [];
+
+      // Rocket state
+      let rocketY = H + 290;
+      let velocity = 0;
+      let thrust   = 0;
+      let timer    = 0;
+      let phase    = 'idle';
+      let revealed = false;
+      let shakeX   = 0, shakeY = 0;
+
+      function spawnSmoke(intensity) {
+        for (let i = 0; i < (intensity * 5) | 0; i++) {
+          const isFlame = Math.random() < 0.55;
+          smoke.push({
+            x:     CX + (Math.random() - 0.5) * 28 * intensity,
+            y:     rocketY + 12 + Math.random() * 18,
+            vx:    (Math.random() - 0.5) * 2.5,
+            vy:    Math.random() * 4.5 + 1.5,
+            r:     isFlame ? Math.random() * 5 + 2 : Math.random() * 9 + 5,
+            life:  1,
+            decay: Math.random() * 0.025 + 0.01,
+            flame: isFlame,
+          });
+        }
+      }
+
+      function drawRocket(cx, botY, thr) {
+        const BW = 44, BH = 155, NH = 82;
+        const bodyTop = botY - 20 - BH;
+
+        // ── EXHAUST FLAME ──
+        if (thr > 0.05) {
+          const flH = 65 + thr * 130;
+          // outer bloom
+          const og = ctx.createRadialGradient(cx, botY + 8, 0, cx, botY + flH * 0.5, flH * 0.65);
+          og.addColorStop(0,   `rgba(255,220,80,${thr * 0.9})`);
+          og.addColorStop(0.4, `rgba(255,90,10,${thr * 0.55})`);
+          og.addColorStop(1,   'rgba(255,30,0,0)');
+          ctx.save();
+          ctx.beginPath();
+          ctx.ellipse(cx, botY + flH * 0.45, BW * 0.55 * thr, flH * 0.65, 0, 0, Math.PI * 2);
+          ctx.fillStyle = og;
+          ctx.fill();
+          ctx.restore();
+          // inner bright core
+          const ig = ctx.createLinearGradient(cx, botY, cx, botY + flH * 0.6);
+          ig.addColorStop(0,   'rgba(255,255,255,1)');
+          ig.addColorStop(0.25,'rgba(255,245,130,0.95)');
+          ig.addColorStop(1,   'rgba(255,100,0,0)');
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(cx - BW * 0.22 * thr, botY);
+          ctx.quadraticCurveTo(cx - BW * 0.28 * thr, botY + flH * 0.5, cx, botY + flH * 0.92);
+          ctx.quadraticCurveTo(cx + BW * 0.28 * thr, botY + flH * 0.5, cx + BW * 0.22 * thr, botY);
+          ctx.closePath();
+          ctx.fillStyle = ig;
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // ── AFT FINS ──
+        ctx.save();
+        let g = ctx.createLinearGradient(cx - BW/2 - 36, 0, cx - BW/2, 0);
+        g.addColorStop(0, '#4a4a4a'); g.addColorStop(1, '#aaa');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.moveTo(cx - BW/2,      botY - 25 - BH * 0.35);
+        ctx.lineTo(cx - BW/2 - 36, botY - 12);
+        ctx.lineTo(cx - BW/2,      botY - 18);
+        ctx.closePath(); ctx.fill();
+        g = ctx.createLinearGradient(cx + BW/2, 0, cx + BW/2 + 36, 0);
+        g.addColorStop(0, '#aaa'); g.addColorStop(1, '#4a4a4a');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.moveTo(cx + BW/2,      botY - 25 - BH * 0.35);
+        ctx.lineTo(cx + BW/2 + 36, botY - 12);
+        ctx.lineTo(cx + BW/2,      botY - 18);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+
+        // ── BODY ──
+        const bg = ctx.createLinearGradient(cx - BW/2, 0, cx + BW/2, 0);
+        bg.addColorStop(0,    '#878787');
+        bg.addColorStop(0.15, '#dedede');
+        bg.addColorStop(0.6,  '#bebebe');
+        bg.addColorStop(1,    '#6a6a6a');
+        ctx.save();
+        ctx.fillStyle = bg;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(cx - BW/2, bodyTop, BW, BH + 22, [4, 4, 0, 0]);
+        } else {
+          ctx.rect(cx - BW/2, bodyTop, BW, BH + 22);
+        }
+        ctx.fill();
+        // heat-shield tiles (dark, left half)
+        const hsg = ctx.createLinearGradient(cx - BW/2, 0, cx + 4, 0);
+        hsg.addColorStop(0,   'rgba(22,12,8,0.82)');
+        hsg.addColorStop(0.8, 'rgba(22,12,8,0.12)');
+        hsg.addColorStop(1,   'rgba(22,12,8,0)');
+        ctx.fillStyle = hsg;
+        ctx.fillRect(cx - BW/2, bodyTop, BW / 2 + 4, BH + 22);
+        ctx.strokeStyle = 'rgba(0,0,0,0.28)';
+        ctx.lineWidth = 0.6;
+        for (let r = 0; r < 7; r++) {
+          const ty = bodyTop + r * (BH / 7);
+          ctx.beginPath(); ctx.moveTo(cx - BW/2, ty); ctx.lineTo(cx + 4, ty); ctx.stroke();
+        }
+        for (let c = 0; c < 3; c++) {
+          const tx = cx - BW/2 + c * (BW * 0.55 / 3);
+          ctx.beginPath(); ctx.moveTo(tx, bodyTop); ctx.lineTo(tx, bodyTop + BH); ctx.stroke();
+        }
+        // specular highlight stripe
+        const hl = ctx.createLinearGradient(cx - BW/2 + 10, 0, cx - BW/2 + 20, 0);
+        hl.addColorStop(0,   'rgba(255,255,255,0)');
+        hl.addColorStop(0.5, 'rgba(255,255,255,0.28)');
+        hl.addColorStop(1,   'rgba(255,255,255,0)');
+        ctx.fillStyle = hl;
+        ctx.fillRect(cx - BW/2 + 10, bodyTop, 10, BH + 22);
+        ctx.restore();
+
+        // ── NOSE CONE ──
+        ctx.save();
+        const ncg = ctx.createLinearGradient(cx - BW/2, 0, cx + BW/2, 0);
+        ncg.addColorStop(0,    '#8e8e8e');
+        ncg.addColorStop(0.2,  '#dedede');
+        ncg.addColorStop(0.65, '#bebebe');
+        ncg.addColorStop(1,    '#747474');
+        ctx.fillStyle = ncg;
+        ctx.beginPath();
+        ctx.moveTo(cx - BW/2, bodyTop);
+        ctx.bezierCurveTo(cx - BW/2, bodyTop - NH*0.55, cx - BW/6, bodyTop - NH, cx, bodyTop - NH);
+        ctx.bezierCurveTo(cx + BW/6, bodyTop - NH, cx + BW/2, bodyTop - NH*0.55, cx + BW/2, bodyTop);
+        ctx.closePath(); ctx.fill();
+        // nose heat shield
+        const nhg = ctx.createLinearGradient(cx - BW/2, 0, cx, 0);
+        nhg.addColorStop(0, 'rgba(22,12,8,0.72)');
+        nhg.addColorStop(1, 'rgba(22,12,8,0)');
+        ctx.fillStyle = nhg;
+        ctx.beginPath();
+        ctx.moveTo(cx - BW/2, bodyTop);
+        ctx.bezierCurveTo(cx - BW/2, bodyTop - NH*0.55, cx - BW/6, bodyTop - NH, cx, bodyTop - NH);
+        ctx.bezierCurveTo(cx, bodyTop - NH*0.55, cx, bodyTop - NH*0.1, cx, bodyTop);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+
+        // ── FORWARD CANARDS ──
+        ctx.save();
+        ctx.fillStyle = '#aaaaaa';
+        ctx.beginPath(); // left
+        ctx.moveTo(cx - BW/2,      bodyTop + 22);
+        ctx.lineTo(cx - BW/2 - 25, bodyTop + 42);
+        ctx.lineTo(cx - BW/2 - 16, bodyTop + 58);
+        ctx.lineTo(cx - BW/2,      bodyTop + 52);
+        ctx.closePath(); ctx.fill();
+        ctx.beginPath(); // right
+        ctx.moveTo(cx + BW/2,      bodyTop + 22);
+        ctx.lineTo(cx + BW/2 + 25, bodyTop + 42);
+        ctx.lineTo(cx + BW/2 + 16, bodyTop + 58);
+        ctx.lineTo(cx + BW/2,      bodyTop + 52);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+
+        // ── 3 RAPTOR ENGINE NOZZLES ──
+        [-15, 0, 15].forEach(ox => {
+          ctx.save();
+          const ng = ctx.createRadialGradient(cx + ox, botY + 2, 1, cx + ox, botY + 2, 10);
+          ng.addColorStop(0, thr > 0.1 ? '#fff8c0' : '#2a2a2a');
+          ng.addColorStop(0.5, '#484848'); ng.addColorStop(1, '#181818');
+          ctx.fillStyle = ng;
+          ctx.beginPath(); ctx.ellipse(cx + ox, botY + 2, 10, 8, 0, 0, Math.PI * 2); ctx.fill();
+          if (thr > 0.1) {
+            const gl = ctx.createRadialGradient(cx + ox, botY + 2, 4, cx + ox, botY + 2, 22 * thr);
+            gl.addColorStop(0, `rgba(255,200,60,${thr * 0.9})`);
+            gl.addColorStop(1, 'rgba(255,80,0,0)');
+            ctx.fillStyle = gl;
+            ctx.beginPath(); ctx.arc(cx + ox, botY + 2, 22 * thr, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.restore();
+        });
+      }
+
+      function tick() {
+        timer += 1/60;
+
+        // Space background
+        ctx.fillStyle = '#000010';
+        ctx.fillRect(0, 0, W, H);
+
+        // Twinkling stars
+        stars.forEach(s => {
+          s.phase += 0.022;
+          ctx.save();
+          ctx.globalAlpha = 0.35 + 0.65 * Math.abs(Math.sin(s.phase));
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        });
+
+        // Phase transitions
+        if (phase === 'idle') {
+          thrust = 0.14 + 0.07 * Math.sin(timer * 3.5); // gentle idle glow
+          if (timer > 2.2) { phase = 'ignite'; timer = 0; }
+
+        } else if (phase === 'ignite') {
+          thrust = Math.min(1, 0.2 + timer * 2.6);
+          shakeX = (Math.random() - 0.5) * 7 * thrust;
+          shakeY = (Math.random() - 0.5) * 5 * thrust;
+          if (timer > 0.65) { phase = 'fly'; timer = 0; velocity = 0.5; }
+
+        } else if (phase === 'fly') {
+          thrust = 1;
+          velocity = Math.min(20, velocity + 0.22);
+          rocketY -= velocity;
+          shakeX *= 0.86; shakeY *= 0.86;
+          // reveal text when mid-body clears ~42% down the screen
+          if (!revealed && (rocketY - 20 - 155/2) < H * 0.42) {
+            revealed = true;
+            body.classList.add('revealed');
+          }
+          if (rocketY < -340) { phase = 'reset'; timer = 0; }
+
+        } else if (phase === 'reset') {
+          thrust = 0; shakeX = 0; shakeY = 0;
+          if (timer > 2.4) {
+            rocketY = H + 290; velocity = 0;
+            revealed = false;
+            body.classList.remove('revealed');
+            phase = 'idle'; timer = 0;
+          }
+        }
+
+        // Spawn exhaust
+        if (thrust > 0.1) spawnSmoke(thrust);
+
+        // Draw smoke / fire particles
+        for (let i = smoke.length - 1; i >= 0; i--) {
+          const p = smoke[i];
+          p.x += p.vx; p.y += p.vy; p.r += 0.28; p.life -= p.decay;
+          if (p.life <= 0) { smoke.splice(i, 1); continue; }
+          ctx.save();
+          ctx.globalAlpha = p.life * 0.62;
+          ctx.fillStyle = p.flame
+            ? `hsl(${15 + p.life * 25}, 100%, ${44 + (1 - p.life) * 30}%)`
+            : `rgb(${(175 + (1-p.life)*80)|0},${(175 + (1-p.life)*80)|0},${(175 + (1-p.life)*80)|0})`;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        }
+
+        // Draw rocket (with shake offset)
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+        drawRocket(CX, rocketY, thrust);
+        ctx.restore();
+
+        rafId = requestAnimationFrame(tick);
+      }
+
+      tick();
+    }
+
+    /* ---- BOUNCE SETUP ---- */
+    function setupBounce() {
+      helloText.innerHTML = 'Hello Elliot!'.split('').map((ch, i) =>
+        ch === ' '
+          ? '<span style="display:inline-block;width:0.3em">&nbsp;</span>'
+          : `<span class="letter" style="animation-delay:${(i * 0.07).toFixed(2)}s">${ch}</span>`
+      ).join('');
+    }
+
+    /* ---- TYPEWRITER RESTART ---- */
+    function restartTypewriter() {
+      helloText.style.animation = 'none';
+      void helloText.offsetWidth; // force reflow
+      helloText.style.animation = '';
+    }
+
+    /* ---- THEME APPLY ---- */
+    function applyTheme(idx) {
+      const theme = THEMES[idx];
+
+      // Clear old theme
+      THEMES.forEach(t => body.classList.remove(`theme-${t.id}`));
+      if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      canvas.style.display = 'none';
+
+      // Reset text to plain string
+      body.classList.remove('revealed');
+      helloText.textContent = 'Hello Elliot!';
+      helloText.style.animation = '';
+
+      // Apply
+      body.classList.add(`theme-${theme.id}`);
+      themeLabel.textContent = theme.name;
+
+      if (theme.canvas) {
+        canvas.style.display = 'block';
+        if (theme.canvas === 'matrix')    runMatrix();
+        if (theme.canvas === 'fireworks') runFireworks();
+        if (theme.canvas === 'starfield') runStarfield();
+        if (theme.canvas === 'america')   runAmerica();
+        if (theme.canvas === 'rocket')    runRocket();
+      }
+
+      if (theme.id === 'bounce')     setupBounce();
+      if (theme.id === 'typewriter') restartTypewriter();
+    }
+
+    nextBtn.addEventListener('click', () => {
+      current = (current + 1) % THEMES.length;
+      applyTheme(current);
+    });
+
+    applyTheme(0);
+  </script>
+</body>
+</html>
